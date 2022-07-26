@@ -1,0 +1,27 @@
+version: "3.5"
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  web:
+    build: .
+    container_name: app
+    restart: on-failure
+    depends_on:
+      - db
+    command: >
+      sh -c "sleep 15; python app/db.py && uvicorn app.main:app --host 0.0.0.0 --port 8000" 
+    ports:
+      - 8000:8000
+
+volumes:
+  postgres_data:

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<!-- https://github.com/simonw/24ways-datasette/blob/master/index.html -->
+
+<head>
+    <meta charset="utf-8">
+    <title>Türkçe Film Arama Motoru</title>
+    <style>
+        body {
+            font-family: helvetica, sans-serif;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <center>
+        <h1>Film Arama Motoru</h1>
+
+        <div id="box">Endpoint Selector</div>
+        <button id="fts" onclick="toggle(this,'selected'); Choice(this)">Full Text Search</button>
+        <button id="trgm" onclick="toggle(this,'selected'); Choice(this)">Trigram</button>
+
+
+        <div>
+            <h3 style="display:inline-block">Selection: <span id="box"></span></h3>
+            <h4 id="selected" style="display:inline-block;">Trigram selected</h4>
+        </div>
+
+        <form>
+            <p><input id="searchbox" type="Film adını giriniz" placeholder="Film Adı" style="width: 60%"></p>
+        </form>
+
+        <div id="results"></div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script>
+
+            const searchbox = document.getElementById("searchbox");
+            console.log(searchbox);
+            let requestInFlight = null;
+
+            var url_temp = "http://localhost:8000/trgm?term=";
+            console.log("Current Endpoint: " + url_temp);
+
+            function Choice(elem) {
+                var box = document.getElementById("box");
+                if (elem.id == "fts") {
+                    url_temp = "http://localhost:8000/fts?term=";
+
+                    console.log("FTS selected");
+                    console.log(url_temp);
+                } else if (elem.id == "trgm") {
+                    url_temp = "http://localhost:8000/trgm?term=";
+                    console.log("trgm selected");
+                    console.log(url_temp);
+                } else {
+                    console.log("error");
+
+                };
+            };
+            /*toggle func */
+
+
+
+            function toggle(elem, id) {
+                var name = elem.innerHTML;
+                const sel = " selected"
+                console.log(name)
+
+                var div1 = document.getElementById(id);
+                if (div1.style.display != "none") {
+                    div1.innerHTML = name + sel;
+
+                } else {
+
+                    div1.style.display = "inline-block";
+                    div1.innerHTML = name + sel;
+
+                }
+            }
+
+
+
+
+            searchbox.onkeyup = debounce(() => {
+                const q = searchbox.value;
+                const url = (
+                    url_temp + encodeURIComponent(q)
+                );
+                console.log(url);
+                let currentRequest = {};
+                requestInFlight = currentRequest;
+                fetch(url).then(r => r.json()).then(d => {
+                    if (requestInFlight !== currentRequest) {
+                        return;
+                    }
+                    let results = d.map(r => `
+                <div class="result">
+
+                    <h3>${r}</h3>
+
+            `).join("");
+                    document.getElementById("results").innerHTML = results;
+                });
+            }, 100);
+
+            function debounce(func, wait, immediate) {
+                let timeout;
+                return function () {
+                    let context = this, args = arguments;
+                    let later = () => {
+                        timeout = null;
+                        if (!immediate) func.apply(context, args);
+                    };
+                    let callNow = immediate && !timeout;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                    if (callNow) func.apply(context, args);
+                };
+            };
+
+            const highlight = (s) => htmlEscape(s).replace(
+                /b4de2a49c8/g, '<b>'
+            ).replace(
+                /8c94a2ed4b/g, '</b>'
+            );
+
+            const htmlEscape = (s) => s.replace(
+                /&/g, '&amp;'
+            ).replace(
+                />/g, '&gt;'
+            ).replace(
+                /</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); </script>
+    </center>
+
+</body>
+
+
+</html>
